@@ -254,7 +254,15 @@ public class LexState extends LuaC {
 		this.source = source;
 		this.nbuff = 0;   /* initialize buffer */
 		this.nextChar(); /* read first char */
+		this.skipShebang();
 	}
+	
+	private void skipShebang() {
+		if ( current == '#' )
+			while (!currIsNewline() && current != EOZ)
+				nextChar();
+	}
+	
 
 
 	/*
@@ -602,7 +610,7 @@ public class LexState extends LuaC {
 	void next() {
 		lastline = linenumber;
 		if (lookahead.token != TK_EOS) { /* is there a look-ahead token? */
-			t = lookahead; /* use this one */
+			t.token = lookahead.token; /* use this one */
 			lookahead.token = TK_EOS; /* and discharge it */
 		} else
 			t.token = llex(t.seminfo); /* read next token */

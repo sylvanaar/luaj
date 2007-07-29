@@ -25,7 +25,11 @@ public class SimpleTests extends TestCase {
 		state.doCall( c, new LValue[0] );
 	
     }
-	
+
+    public void testFirst() {
+    	testInlineTable();
+    }
+    
 	public void testTrivial() {
 		String s = "print( 2 )\n";
 		doTest( s );
@@ -54,6 +58,18 @@ public class SimpleTests extends TestCase {
 			"  a=a+1\n"+
 			"  print( a )\n"+
 			"end\n";
+		doTest( s );
+	}
+	
+	public void testShebang() {
+		String s = "#!../lua\n"+
+			"print( 2 )\n";
+		doTest( s );
+	}
+	
+	public void testInlineTable() {
+		String s = "A = {g=10}\n"+
+			"print( A )\n";
 		doTest( s );
 	}
 }
