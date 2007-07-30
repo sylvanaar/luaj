@@ -25,12 +25,8 @@ public class SimpleTests extends TestCase {
 		state.doCall( c, new LValue[0] );
 	
     }
-//*
-    public void testFirst() {
-    	testEqualsAnd();
-    }
-    
-	public void testTrivial() {
+
+    public void testTrivial() {
 		String s = "print( 2 )\n";
 		doTest( s );
 	}
@@ -72,9 +68,9 @@ public class SimpleTests extends TestCase {
 			"print( A )\n";
 		doTest( s );
 	}
-//*/	
+
 	public void testEqualsAnd() {
-		String s = "return a == b and b\n";
+		String s = "print( 1 == b and b )\n";
 		doTest( s );
 	}
 }
