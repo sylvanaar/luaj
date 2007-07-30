@@ -76,14 +76,14 @@ public class LexState extends LuaC {
 
 	private static class Token {
 		int token;
-		SemInfo seminfo = new SemInfo();
+		final SemInfo seminfo = new SemInfo();
 	};
 	
 	int current;  /* current character (charint) */
 	int linenumber;  /* input line counter */
 	int lastline;  /* line of last token `consumed' */
-	Token t = new Token();  /* current token */
-	Token lookahead = new Token();  /* look ahead token */
+	final Token t = new Token();  /* current token */
+	final Token lookahead = new Token();  /* look ahead token */
 	FuncState fs;  /* `FuncState' is private to the parser */
 	Compiler L;
 	Reader z;  /* input stream */
@@ -636,7 +636,7 @@ public class LexState extends LuaC {
 			static class S {
 				int info, aux;
 			}
-			S s = new S();
+			final S s = new S();
 			private LNumber _nval;
 			public void setNval(LNumber r) {
 				_nval = r;
@@ -645,12 +645,12 @@ public class LexState extends LuaC {
 				return (_nval == null? new LInteger(s.info): _nval);
 			}
 		};
-		U u = new U();
-		IntPtr t = new IntPtr(); /* patch list of `exit when true' */
-		IntPtr f = new IntPtr(); /* patch list of `exit when false' */
+		final U u = new U();
+		final IntPtr t = new IntPtr(); /* patch list of `exit when true' */
+		final IntPtr f = new IntPtr(); /* patch list of `exit when false' */
 		void init( int k, int i ) {
-			this.f = new IntPtr(NO_JUMP);
-			this.t = new IntPtr(NO_JUMP);
+			this.f.i = NO_JUMP;
+			this.t.i = NO_JUMP;
 			this.k = k;
 			this.u.s.info = i;
 		}
@@ -664,9 +664,12 @@ public class LexState extends LuaC {
 		}
 
 		public void setvalue(expdesc other) {
-			this.u = other.u;
-			this.t = other.t;
-			this.f = other.f;
+			this.k = other.k;
+			this.u._nval = other.u._nval;
+			this.u.s.info = other.u.s.info;
+			this.u.s.aux = other.u.s.aux;
+			this.t.i = other.t.i;
+			this.f.i = other.f.i;
 		}
 	}
 		

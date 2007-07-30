@@ -38,36 +38,41 @@ public class LuaC extends Lua {
 
 
 	static void SET_OPCODE(InstructionPtr i,int o) {
-		i.set( ( i.get() & (MASK_NOT_OP)) | ((o & MAX_OP) << POS_OP) );
+		i.set( ( i.get() & (MASK_NOT_OP)) | ((o << POS_OP) & MASK_OP) );
 	}
 	
 	static void SETARG_A(InstructionPtr i,int u) {
-		i.set( ( i.get() & (MASK_NOT_A)) | ((u & MAXARG_A) << POS_A) );
+		i.set( ( i.get() & (MASK_NOT_A)) | ((u << POS_A) & MASK_A) );
 	}
 
 	static void SETARG_B(InstructionPtr i,int u) {
-		i.set( ( i.get() & (MASK_NOT_B)) | ((u & MAXARG_B) << POS_B) );
+		i.set( ( i.get() & (MASK_NOT_B)) | ((u << POS_B) & MASK_B) );
 	}
 
 	static void SETARG_C(InstructionPtr i,int u) {
-		i.set( ( i.get() & (MASK_NOT_C)) | ((u & MAXARG_C) << POS_C) );
+		i.set( ( i.get() & (MASK_NOT_C)) | ((u << POS_C) & MASK_C) );
 	}
 	
 	static void SETARG_Bx(InstructionPtr i,int u) {
-		i.set( ( i.get() & (MASK_NOT_Bx)) | ((u & MAXARG_Bx) << POS_Bx) );
+		i.set( ( i.get() & (MASK_NOT_Bx)) | ((u << POS_Bx) & MASK_Bx) );
 	}
 	
 	static void SETARG_sBx(InstructionPtr i,int u) {
-		i.set( ( i.get() & (MASK_NOT_Bx)) | ((u + MAXARG_sBx) << POS_Bx) );
+		SETARG_Bx( i, u + MAXARG_sBx );
 	}
 
 	static int CREATE_ABC(int o, int a, int b, int c) {
-		return (o<<POS_OP) | (a<<POS_A) | (b<<POS_B) | (c<<POS_C);
+		return ((o << POS_OP) & MASK_OP) |
+				((a << POS_A) & MASK_A) |
+				((b << POS_B) & MASK_B) |
+				((c << POS_C) & MASK_C) ;
 	}
 	
 	static int CREATE_ABx(int o, int a, int bc) {
-		return (o<<POS_OP) | (a<<POS_A) | (bc<<POS_Bx);
-	}
+		return ((o << POS_OP) & MASK_OP) |
+				((a << POS_A) & MASK_A) |
+				((bc << POS_Bx) & MASK_Bx) ;
+ 	}
 
 	// vector reallocation
 	

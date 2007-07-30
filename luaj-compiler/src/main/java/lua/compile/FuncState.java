@@ -257,8 +257,8 @@ public class FuncState extends LuaC {
 		this.codeABC(OP_RETURN, first, nret + 1, 0);
 	}
 
-	int condjump(int /* OpCode */op, int A, int B, boolean C) {
-		this.codeABC(op, A, B, (C ? 1 : 0));
+	int condjump(int /* OpCode */op, int A, int B, int C) {
+		this.codeABC(op, A, B, C);
 		return this.jump();
 	}
 
@@ -678,12 +678,12 @@ public class FuncState extends LuaC {
 		SETARG_A(pc, (GETARG_A(pc.get() != 0 ? 0 : 1)));
 	}
 
-	int jumponcond(expdesc e, boolean cond) {
+	int jumponcond(expdesc e, int cond) {
 		if (e.k == LexState.VRELOCABLE) {
 			int ie = this.getcode(e);
 			if (GET_OPCODE(ie) == OP_NOT) {
 				this.pc--; /* remove previous OP_NOT */
-				return this.condjump(OP_TEST, GETARG_B(ie), 0, !cond);
+				return this.condjump(OP_TEST, GETARG_B(ie), 0, (cond!=0? 0: 1));
 			}
 			/* else go through */
 		}
@@ -712,13 +712,13 @@ public class FuncState extends LuaC {
 			break;
 		}
 		default: {
-			pc = this.jumponcond(e, false);
+			pc = this.jumponcond(e, 0);
 			break;
 		}
 		}
 		this.concat(e.f, pc); /* insert last jump in `f' list */
 		this.patchtohere(e.t.i);
-		e.t = new IntPtr(LexState.NO_JUMP);
+		e.t.i = LexState.NO_JUMP;
 	}
 
 	void goiffalse(expdesc e) {
@@ -739,7 +739,7 @@ public class FuncState extends LuaC {
 			break;
 		}
 		default: {
-			pc = this.jumponcond(e, true);
+			pc = this.jumponcond(e, 1);
 			break;
 		}
 		}
@@ -781,9 +781,9 @@ public class FuncState extends LuaC {
 		}
 		/* interchange true and false lists */
 		{
-			IntPtr temp = e.f;
-			e.f = e.t;
-			e.t = temp;
+			int temp = e.f.i;
+			e.f.i = e.t.i;
+			e.t.i = temp;
 		}
 		this.removevalues(e.f.i);
 		this.removevalues(e.t.i);
@@ -858,7 +858,7 @@ public class FuncState extends LuaC {
 			o2 = temp; /* o1 <==> o2 */
 			cond = 1;
 		}
-		e1.u.s.info = this.condjump(op, cond, o1, o2 != 0);
+		e1.u.s.info = this.condjump(op, cond, o1, o2);
 		e1.k = LexState.VJMP;
 	}
 
