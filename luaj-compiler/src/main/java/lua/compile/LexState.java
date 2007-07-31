@@ -133,9 +133,8 @@ public class LexState extends LuaC {
 	}
 	
 	
-	public LexState(Compiler state, Reader reader, String name) {
+	public LexState(Compiler state, Reader reader) {
 		this.z = reader;
-		this.source = state.newTString( name );
 		this.buff = new char[32];
 		this.L = state;
 		init();
@@ -858,7 +857,7 @@ public class LexState extends LuaC {
 		  fs.nlocvars = 0;
 		  fs.nactvar = 0;
 		  fs.bl = null;
-		  f.source = this.source;
+		  f.source = null;
 		  f.maxstacksize = 2;  /* registers 0/1 are always valid */
 		  //fs.h = new LTable();
 		  fs.htable = new Hashtable();

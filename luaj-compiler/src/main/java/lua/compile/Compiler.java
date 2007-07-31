@@ -4,6 +4,7 @@ import java.io.Reader;
 import java.util.Hashtable;
 
 import lua.io.Proto;
+import lua.value.LString;
 
 public class Compiler {
 
@@ -16,7 +17,7 @@ public class Compiler {
 
 			
 	Proto luaY_parser(Reader z, String name) {
-		LexState lexstate = new LexState(this, z, name);
+		LexState lexstate = new LexState(this, z);
 		FuncState funcstate = new FuncState();
 		// lexstate.buff = buff;
 		lexstate.setinput( this, z, new TString(name) );
@@ -31,6 +32,7 @@ public class Compiler {
 		assert (funcstate.prev == null);
 		assert (funcstate.f.nups == 0);
 		assert (lexstate.fs == null);
+		funcstate.f.source = new LString("@"+name);
 		return funcstate.f;
 	}
 	

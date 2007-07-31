@@ -34,7 +34,7 @@ public class AbstractUnitTests extends TestCase {
 			// compile in memory
 			InputStream is = new ByteArrayInputStream( lua );
 	    	Reader r = new InputStreamReader( is );
-	    	Proto p = Compiler.compile(r, file);
+	    	Proto p = Compiler.compile(r, dir+"/"+file);
 	    	String actual = protoToString( p );
 			
 			// load expected value from jar

@@ -681,7 +681,9 @@ public class FuncState extends LuaC {
 				&& GET_OPCODE(pc.get()) != OP_TESTSET && Lua
 				.GET_OPCODE(pc.get()) != OP_TEST);
 		// SETARG_A(pc, !(GETARG_A(pc.get())));
-		SETARG_A(pc, (GETARG_A(pc.get() != 0 ? 0 : 1)));
+		int a = GETARG_A(pc.get());
+		int nota = (a!=0? 0: 1);
+		SETARG_A(pc, nota);
 	}
 
 	int jumponcond(expdesc e, int cond) {
