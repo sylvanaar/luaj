@@ -326,8 +326,7 @@ public class FuncState extends LuaC {
 			SETARG_A(i, reg);
 		else
 			/* no register to put value or register already has the value */
-			i.set(CREATE_ABC(OP_TEST, GETARG_B(i.get()), 0, Lua
-					.GETARG_C(i.get())));
+			i.set(CREATE_ABC(OP_TEST, GETARG_B(i.get()), 0, Lua.GETARG_C(i.get())));
 
 		return true;
 	}

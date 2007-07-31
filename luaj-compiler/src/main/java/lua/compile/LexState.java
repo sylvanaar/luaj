@@ -656,7 +656,7 @@ public class LexState extends LuaC {
 		}
 
 		boolean hasjumps() {
-			return (t != f);
+			return (t.i != f.i);
 		}
 
 		boolean isnumeral() {
