@@ -877,17 +877,13 @@ public class LexState extends LuaC {
 		this.removevars(0);
 		fs.ret(0, 0); /* final return */
 		f.code = realloc(f.code, fs.pc);
-		f.sizecode = fs.pc;
 		f.lineinfo = realloc(f.lineinfo, fs.pc);
 		// f.sizelineinfo = fs.pc;
 		f.k = realloc(f.k, fs.nk);
-		f.sizek = fs.nk;
 		f.p = realloc(f.p, fs.np);
-		f.sizep = fs.np;
 		f.locvars = realloc(f.locvars, fs.nlocvars);
 		// f.sizelocvars = fs.nlocvars;
 		f.upvalues = realloc(f.upvalues, f.nups);
-		f.sizeupvalues = f.nups;
 		assert (CheckCode.checkcode(f));
 		assert (fs.bl == null);
 		this.fs = fs.prev;

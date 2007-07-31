@@ -77,13 +77,14 @@ public class DumpState {
 	}
 
 	void dumpCode( final Proto f ) throws IOException {
-		dumpInt( f.sizecode );
-		for ( int i=0; i<f.sizecode; i++ )
+		int n = f.code.length;
+		dumpInt( n );
+		for ( int i=0; i<n; i++ )
 			dumpInt( f.code[i] );
 	}
 	
 	void dumpConstants(final Proto f) throws IOException {
-		int i,n=f.sizek;
+		int i,n=f.k.length;
 		 dumpInt(n);
 		 for (i=0; i<n; i++)
 		 {
@@ -100,7 +101,7 @@ public class DumpState {
 			  throw new IllegalArgumentException("bad type for "+o);
 		  }
 		 }
-		 n=f.sizep;
+		 n=f.p.length;
 		 dumpInt(n);
 		 for (i=0; i<n; i++) 
 			 dumpFunction(f.p[i], f.source);
@@ -119,7 +120,7 @@ public class DumpState {
 		  dumpInt(f.locvars[i].startpc);
 		  dumpInt(f.locvars[i].endpc);
 		 }
-		 n= (strip) ? 0 : f.sizeupvalues;
+		 n= (strip) ? 0 : f.upvalues.length;
 		 dumpInt(n);
 		 for (i=0; i<n; i++) dumpString(f.upvalues[i]);	
 	}
