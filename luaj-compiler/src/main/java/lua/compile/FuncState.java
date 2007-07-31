@@ -9,6 +9,7 @@ import lua.io.LocVars;
 import lua.io.Proto;
 import lua.value.LBoolean;
 import lua.value.LDouble;
+import lua.value.LInteger;
 import lua.value.LNil;
 import lua.value.LNumber;
 import lua.value.LString;
@@ -428,6 +429,12 @@ public class FuncState extends LuaC {
 	}
 
 	int numberK(LNumber r) {
+		if ( r instanceof LDouble ) {
+			double d = r.luaAsDouble();
+			int i = (int) d;
+			if ( d == (double) i ) 
+				r = new LInteger(i);
+		}
 		return this.addk(r);
 	}
 
