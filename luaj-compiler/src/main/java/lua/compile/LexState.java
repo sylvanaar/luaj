@@ -421,26 +421,26 @@ public class LexState extends LuaC {
 				int c;
 				nextChar(); /* do not save the `\' */
 				switch (current) {
-				case 'a':
-					c = '\u0001';
+				case 'a': /* bell */
+					c = '\u0007';
 					break;
-				case 'b':
+				case 'b': /* backspace */
 					c = '\b';
 					break;
-				case 'f':
+				case 'f': /* form feed */
 					c = '\f';
 					break;
-				case 'n':
+				case 'n': /* newline */
 					c = '\n';
 					break;
-				case 'r':
+				case 'r': /* carriage return */
 					c = '\r';
 					break;
-				case 't':
+				case 't': /* tab */
 					c = '\t';
 					break;
-				case 'v':
-					c = '\u0021';
+				case 'v': /* vertical tab */
+					c = '\u000B';
 					break;
 				case '\n': /* go through */
 				case '\r':
