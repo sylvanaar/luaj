@@ -77,6 +77,11 @@ public class LexState extends LuaC {
 	private static class Token {
 		int token;
 		final SemInfo seminfo = new SemInfo();
+		public void set(Token other) {
+			this.token = other.token;
+			this.seminfo.r = other.seminfo.r;
+			this.seminfo.ts = other.seminfo.ts;
+		}
 	};
 	
 	int current;  /* current character (charint) */
@@ -609,7 +614,7 @@ public class LexState extends LuaC {
 	void next() {
 		lastline = linenumber;
 		if (lookahead.token != TK_EOS) { /* is there a look-ahead token? */
-			t.token = lookahead.token; /* use this one */
+			t.set( lookahead ); /* use this one */
 			lookahead.token = TK_EOS; /* and discharge it */
 		} else
 			t.token = llex(t.seminfo); /* read next token */
@@ -683,12 +688,6 @@ public class LexState extends LuaC {
 	/*
 	 * * prototypes for recursive non-terminal functions
 	 */
-	void anchor_token() {
-		if (t.token == TK_NAME || t.token == TK_STRING) {
-			TString ts = t.seminfo.ts;
-			newstring(ts.toString());
-		}
-	}
 
 	void error_expected(int token) {
 		syntaxerror(L.pushfstring(LUA_QS(token2str(token)) + " expected"));
