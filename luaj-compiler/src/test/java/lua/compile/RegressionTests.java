@@ -20,8 +20,9 @@ public class RegressionTests extends AbstractUnitTests {
 		super( "regressions" );
 	}
 	
-	public void testConstruct()   { doTest("construct.lua"); }
-	public void testBigAttrs()   { doTest("bigattr.lua"); }
+	public void testModulo()         { doTest("modulo.lua"); }
+	public void testConstruct()      { doTest("construct.lua"); }
+	public void testBigAttrs()       { doTest("bigattr.lua"); }
 	public void testControlChars()   { doTest("controlchars.lua"); }
 	public void testComparators()    { doTest("comparators.lua"); }
 	public void testMathRandomseed() { doTest("mathrandomseed.lua"); }
