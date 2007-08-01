@@ -36,23 +36,27 @@ public class DumpState {
 	private static final int SIZEOF_LUA_NUMBER = 8;
 	private static final int IS_NUMBER_INTEGRAL = 0;
 
-	Compiler L;
+	// types of lua constants
+	private static final int LUA_TNIL		= 0;
+	private static final int LUA_TBOOLEAN		= 1;
+	private static final int LUA_TLIGHTUSERDATA	= 2;
+	private static final int LUA_TNUMBER		= 3;
+	private static final int LUA_TSTRING		= 4;
+	private static final int LUA_TTABLE		= 5;
+	private static final int LUA_TFUNCTION		= 6;
+	private static final int LUA_TUSERDATA		= 7;
+	private static final int LUA_TTHREAD		= 8;
+
 	DataOutputStream writer;
-	byte[] data;
 	boolean strip;
 	int status;
 
-	public DumpState(Compiler L, OutputStream w, byte[] data, boolean strip) {
-		this.L = L;
+	public DumpState(OutputStream w, boolean strip) {
 		this.writer = new DataOutputStream( w );
-		this.data = data;
 		this.strip = strip;
 		this.status = 0;
 	}
 
-	//		#define DumpMem(b,n,size,D)	DumpBlock(b,(n)*(size),D)
-//		#define DumpVar(x,D)	 	DumpMem(&x,1,sizeof(x),D)
-//
 	void dumpBlock(final byte[] b, int size) throws IOException {
 		writer.write(b, 0, size);
 	}
@@ -67,8 +71,9 @@ public class DumpState {
 	
 	void dumpString(LString s) throws IOException {
 		byte[] bytes = s.luaAsString().getBytes(); // TODO: UTF-8 convert here
-		writer.write( bytes.length );
+		dumpInt( bytes.length+1 );
 		writer.write( bytes );
+		writer.write( 0 );
 	}
 	
 	void dumpNumber(double d) throws IOException {
@@ -84,49 +89,56 @@ public class DumpState {
 	}
 	
 	void dumpConstants(final Proto f) throws IOException {
-		int i,n=f.k.length;
-		 dumpInt(n);
-		 for (i=0; i<n; i++)
-		 {
-		  final LValue o = f.k[i];
-		  if ( o == LNil.NIL ) {
-			  // do nothing
-		  } else if ( o instanceof LBoolean ) {
-			dumpChar(o.luaAsBoolean()? 1: 0);
-		  } else if ( o instanceof LNumber ) {
-			dumpNumber( o.luaAsDouble() );
-		  } else if ( o instanceof LString ) {
-			dumpString( (LString) o );
-		  } else {
-			  throw new IllegalArgumentException("bad type for "+o);
-		  }
-		 }
-		 n=f.p.length;
-		 dumpInt(n);
-		 for (i=0; i<n; i++) 
-			 dumpFunction(f.p[i], f.source);
+		int i, n = f.k.length;
+		dumpInt(n);
+		for (i = 0; i < n; i++) {
+			final LValue o = f.k[i];
+			if (o == LNil.NIL) {
+				writer.write(LUA_TNIL);
+				// do nothing more
+			} else if (o instanceof LBoolean) {
+				writer.write(LUA_TBOOLEAN);
+				dumpChar(o.luaAsBoolean() ? 1 : 0);
+			} else if (o instanceof LNumber) {
+				writer.write(LUA_TNUMBER);
+				dumpNumber(o.luaAsDouble());
+			} else if (o instanceof LString) {
+				writer.write(LUA_TSTRING);
+				dumpString((LString) o);
+			} else {
+				throw new IllegalArgumentException("bad type for " + o);
+			}
 		}
+		n = f.p.length;
+		dumpInt(n);
+		for (i = 0; i < n; i++)
+			dumpFunction(f.p[i], f.source);
+	}
 	
-	void dumpDebug( final Proto f ) throws IOException {
-		 int i,n;
-		 n= (strip) ? 0 : f.lineinfo.length;
-		 for ( i=0; i<n; i++) 
-			 dumpInt(f.lineinfo[i]);
-		 n= (strip) ? 0 : f.locvars.length;
-		 dumpInt(n);
-		 for (i=0; i<n; i++)
-		 {
-		  dumpString(f.locvars[i].varname);
-		  dumpInt(f.locvars[i].startpc);
-		  dumpInt(f.locvars[i].endpc);
-		 }
-		 n= (strip) ? 0 : f.upvalues.length;
-		 dumpInt(n);
-		 for (i=0; i<n; i++) dumpString(f.upvalues[i]);	
+	void dumpDebug(final Proto f) throws IOException {
+		int i, n;
+		n = (strip) ? 0 : f.lineinfo.length;
+		dumpInt(n);
+		for (i = 0; i < n; i++)
+			dumpInt(f.lineinfo[i]);
+		n = (strip) ? 0 : f.locvars.length;
+		dumpInt(n);
+		for (i = 0; i < n; i++) {
+			dumpString(f.locvars[i].varname);
+			dumpInt(f.locvars[i].startpc);
+			dumpInt(f.locvars[i].endpc);
+		}
+		n = (strip) ? 0 : f.upvalues.length;
+		dumpInt(n);
+		for (i = 0; i < n; i++)
+			dumpString(f.upvalues[i]);
 	}
 	
 	void dumpFunction(final Proto f, final LString string) throws IOException {
-		dumpString((f.source.equals(string) || strip) ? null : f.source);
+		if ( f.source == null || f.source.equals(string) || strip )
+			dumpInt(0);
+		else
+			dumpString(f.source);
 		dumpInt(f.linedefined);
 		dumpInt(f.lastlinedefined);
 		dumpChar(f.nups);
@@ -153,8 +165,8 @@ public class DumpState {
 	/*
 	** dump Lua function as precompiled chunk
 	*/
-	int dump( Compiler L, Proto f, OutputStream w, byte[] data, boolean strip ) throws IOException {
-		DumpState D = new DumpState(L,w,data,strip);
+	public static int dump( Proto f, OutputStream w, boolean strip ) throws IOException {
+		DumpState D = new DumpState(w,strip);
 		D.dumpHeader();
 		D.dumpFunction(f,null);
 		return D.status;

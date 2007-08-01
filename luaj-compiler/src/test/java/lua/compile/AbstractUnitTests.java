@@ -45,6 +45,18 @@ public class AbstractUnitTests extends TestCase {
 			// compare results
 			assertEquals( expected, actual );
 			
+			// dump into memory
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			DumpState.dump(p, baos, false);
+			byte[] dumped = baos.toByteArray();
+			
+			// re-undump
+			Proto p2 = loadFromBytes( dumped, file );
+			String actual2 = protoToString( p2 );
+			
+			// compare again
+			assertEquals( actual, actual2 );
+			
 		} catch (IOException e) {
 			fail( e.toString() );
 		}
