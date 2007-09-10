@@ -70,9 +70,9 @@ public class DumpState {
 	}
 	
 	void dumpString(LString s) throws IOException {
-		byte[] bytes = s.luaAsString().getBytes(); // TODO: UTF-8 convert here
-		dumpInt( bytes.length+1 );
-		writer.write( bytes );
+		final int len = s.length();
+		dumpInt( len+1 );
+		s.write( writer, 0, len );
 		writer.write( 0 );
 	}
 	
