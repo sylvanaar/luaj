@@ -30,9 +30,9 @@ public class Compiler {
 		lexstate.chunk();
 		lexstate.check(LexState.TK_EOS);
 		lexstate.close_func();
-		assert (funcstate.prev == null);
-		assert (funcstate.f.nups == 0);
-		assert (lexstate.fs == null);
+		LuaC._assert (funcstate.prev == null);
+		LuaC._assert (funcstate.f.nups == 0);
+		LuaC._assert (lexstate.fs == null);
 		return funcstate.f;
 	}
 	

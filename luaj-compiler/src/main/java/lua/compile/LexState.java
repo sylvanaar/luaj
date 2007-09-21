@@ -15,6 +15,7 @@ import lua.value.LInteger;
 import lua.value.LNumber;
 
 public class LexState extends LuaC {
+	
 	private static final int EOZ    = (-1);
 	private static final int MAXSRC = 80;
 	private static final int MAX_INT = Integer.MAX_VALUE-2;
@@ -239,7 +240,7 @@ public class LexState extends LuaC {
 
 	void inclinenumber() {
 		int old = current;
-		assert( currIsNewline() );
+		_assert( currIsNewline() );
 		nextChar(); /* skip '\n' or '\r' */
 		if ( currIsNewline() && current != old )
 			nextChar(); /* skip '\n\r' or '\r\n' */
@@ -330,7 +331,7 @@ public class LexState extends LuaC {
 	}
 
 	void read_numeral(SemInfo seminfo) {
-		assert (isdigit(current));
+		_assert (isdigit(current));
 		do {
 			save_and_next();
 		} while (isdigit(current) || current == '.');
@@ -348,7 +349,7 @@ public class LexState extends LuaC {
 	int skip_sep() {
 		int count = 0;
 		int s = current;
-		assert (s == '[' || s == ']');
+		_assert (s == '[' || s == ']');
 		save_and_next();
 		while (current == '=') {
 			save_and_next();
@@ -582,7 +583,7 @@ public class LexState extends LuaC {
 			}
 			default: {
 				if (isspace(current)) {
-					assert (!currIsNewline());
+					_assert (!currIsNewline());
 					nextChar();
 					continue;
 				} else if (isdigit(current)) {
@@ -621,7 +622,7 @@ public class LexState extends LuaC {
 	}
 
 	void lookahead() {
-		assert (lookahead.token == TK_EOS);
+		_assert (lookahead.token == TK_EOS);
 		lookahead.token = llex(lookahead.seminfo);
 	}
 
@@ -878,8 +879,8 @@ public class LexState extends LuaC {
 		f.locvars = realloc(f.locvars, fs.nlocvars);
 		// f.sizelocvars = fs.nlocvars;
 		f.upvalues = realloc(f.upvalues, f.nups);
-		assert (CheckCode.checkcode(f));
-		assert (fs.bl == null);
+		_assert (CheckCode.checkcode(f));
+		_assert (fs.bl == null);
 		this.fs = fs.prev;
 //		L.top -= 2; /* remove table and prototype from the stack */
 		// /* last token read was anchored in defunct function; must reanchor it
@@ -968,7 +969,7 @@ public class LexState extends LuaC {
 		fs.exp2nextreg(t); /* fix it at stack top (for gc) */
 		this.checknext('{');
 		do {
-			assert (cc.v.k == VVOID || cc.tostore > 0);
+			_assert (cc.v.k == VVOID || cc.tostore > 0);
 			if (this.t.token == '}')
 				break;
 			fs.closelistfield(cc);
@@ -1117,7 +1118,7 @@ public class LexState extends LuaC {
 			return;
 		}
 		}
-		assert (f.k == VNONRELOC);
+		_assert (f.k == VNONRELOC);
 		base = f.u.s.info; /* base register for call */
 		if (hasmultret(args.k))
 			nparams = Lua.LUA_MULTRET; /* open call */
@@ -1394,7 +1395,7 @@ public class LexState extends LuaC {
 	  BlockCnt bl = new BlockCnt();
 	  fs.enterblock(bl, false);
 	  this.chunk();
-	  assert(bl.breaklist.i == NO_JUMP);
+	  _assert(bl.breaklist.i == NO_JUMP);
 	  fs.leaveblock();
 	}
 
@@ -1766,7 +1767,7 @@ public class LexState extends LuaC {
 				fs.setmultret(e);
 				if (e.k == VCALL && nret == 1) { /* tail call? */
 					SET_OPCODE(fs.getcodePtr(e), Lua.OP_TAILCALL);
-					assert (Lua.GETARG_A(fs.getcode(e)) == fs.nactvar);
+					_assert (Lua.GETARG_A(fs.getcode(e)) == fs.nactvar);
 				}
 				first = fs.nactvar;
 				nret = Lua.LUA_MULTRET; /* return all values */
@@ -1776,7 +1777,7 @@ public class LexState extends LuaC {
 				else {
 					fs.exp2nextreg(e); /* values must go to the `stack' */
 					first = fs.nactvar; /* return all `active' values */
-					assert (nret == fs.freereg - first);
+					_assert (nret == fs.freereg - first);
 				}
 			}
 		}
@@ -1844,7 +1845,7 @@ public class LexState extends LuaC {
 		while (!islast && !block_follow(this.t.token)) {
 			islast = this.statement();
 			this.testnext(';');
-			assert (this.fs.f.maxstacksize >= this.fs.freereg 
+			_assert (this.fs.f.maxstacksize >= this.fs.freereg 
 					&& this.fs.freereg >= this.fs.nactvar);
 			this.fs.freereg = this.fs.nactvar; /* free registers */
 		}

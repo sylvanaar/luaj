@@ -12,6 +12,10 @@ import lua.value.LValue;
  * 
  */
 public class LuaC extends Lua {
+	protected static void _assert(boolean b) {		
+		if (!b) throw new RuntimeException("assert failed");
+	}
+	
 	static final int LUAI_MAXUPVALUES = 60;
 	static final int LUAI_MAXVARS = 200;
 	static final int LFIELDS_PER_FLUSH = 50;
