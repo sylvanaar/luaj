@@ -20,7 +20,7 @@ public class Compiler {
 		LexState lexstate = new LexState(this, z);
 		FuncState funcstate = new FuncState();
 		// lexstate.buff = buff;
-		lexstate.setinput( this, z, new TString(name) );
+		lexstate.setinput( this, z, new LString(name) );
 		lexstate.open_func(funcstate);
 		/* main func. is always vararg */
 		funcstate.varargflags = LuaC.VARARG_ISVARARG;
@@ -49,10 +49,10 @@ public class Compiler {
 	// all the various "newstring()" like functions
 	Hashtable strings = new Hashtable();
 	
-	public TString newTString(String s) {
-		TString t = (TString) strings.get(s);
+	public LString newTString(String s) {
+		LString t = (LString) strings.get(s);
 		if ( t == null )
-			strings.put( s, t = new TString(s) );
+			strings.put( s, t = new LString(s) );
 		return t;
 	}
 
@@ -60,7 +60,7 @@ public class Compiler {
 		return string;
 	}
 
-	public TString newlstr(char[] chars, int offset, int len) {
+	public LString newlstr(char[] chars, int offset, int len) {
 		return newTString( new String(chars,offset,len) );
 	}
 }

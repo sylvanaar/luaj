@@ -13,6 +13,7 @@ import lua.io.Proto;
 import lua.value.LDouble;
 import lua.value.LInteger;
 import lua.value.LNumber;
+import lua.value.LString;
 
 public class LexState extends LuaC {
 	
@@ -72,7 +73,7 @@ public class LexState extends LuaC {
 	/* semantics information */
 	private static class SemInfo {
 		LNumber r;
-		TString ts;
+		LString ts;
 	};
 
 	private static class Token {
@@ -95,7 +96,7 @@ public class LexState extends LuaC {
 	Reader z;  /* input stream */
 	char[] buff;  /* buffer for tokens */
 	int nbuff; /* length of buffer */
-	TString source;  /* current source name */
+	LString source;  /* current source name */
 	char decpoint;  /* locale decimal point */
 
 	/* ORDER RESERVED */
@@ -121,6 +122,13 @@ public class LexState extends LuaC {
 	final static int FIRST_RESERVED = TK_AND;
 	final static int NUM_RESERVED = TK_WHILE+1-FIRST_RESERVED;
 	
+	final static Hashtable RESERVED = new Hashtable();
+	static {
+		for ( int i=0; i<NUM_RESERVED; i++ ) {
+			LString ts = new LString( luaX_tokens[i] );
+			RESERVED.put(ts, new Integer(FIRST_RESERVED+i));
+		}
+	}
 
 	private boolean isalnum(int c) {
 		return Character.isLetterOrDigit(c);
@@ -143,7 +151,6 @@ public class LexState extends LuaC {
 		this.z = reader;
 		this.buff = new char[32];
 		this.L = state;
-		init();
 	}
 
 	void nextChar() {
@@ -170,12 +177,6 @@ public class LexState extends LuaC {
 		buff[nbuff++] = (char) c;
 	}
 
-	void init() {
-		for ( int i=0; i<NUM_RESERVED; i++ ) {
-			TString ts = L.newTString( luaX_tokens[i] );
-			ts.reserved = (byte) (i+1);
-		}
-	}
 
 	String token2str( int token ) {
 		if ( token < FIRST_RESERVED ) {
@@ -230,11 +231,11 @@ public class LexState extends LuaC {
 		lexerror( msg, t.token );
 	}
 
-	TString newstring( char[] chars, int offset, int len) {
+	LString newstring( char[] chars, int offset, int len) {
 		return newstring( new String(chars, offset, len) );
 	}
 
-	TString newstring( String s ) {
+	LString newstring( String s ) {
 		return L.newTString( s );
 	}
 
@@ -248,7 +249,7 @@ public class LexState extends LuaC {
 			syntaxerror("chunk has too many lines");
 	}
 
-	void setinput( Compiler L, Reader z, TString source ) {
+	void setinput( Compiler L, Reader z, LString source ) {
 		this.decpoint = '.';
 		this.L = L;
 		this.lookahead.token = TK_EOS; /* no look-ahead token */
@@ -591,13 +592,13 @@ public class LexState extends LuaC {
 					return TK_NUMBER;
 				} else if (isalpha(current) || current == '_') {
 					/* identifier or reserved word */
-					TString ts;
+					LString ts;
 					do {
 						save_and_next();
 					} while (isalnum(current) || current == '_');
 					ts = newstring(buff, 0, nbuff);
-					if (ts.reserved > 0) /* reserved word? */
-						return ts.reserved - 1 + FIRST_RESERVED;
+					if ( RESERVED.containsKey(ts) )
+						return ((Integer)RESERVED.get(ts)).intValue();
 					else {
 						seminfo.ts = ts;
 						return TK_NAME;
@@ -730,15 +731,15 @@ public class LexState extends LuaC {
 		}
 	}
 
-	TString str_checkname() {
-		TString ts;
+	LString str_checkname() {
+		LString ts;
 		check(TK_NAME);
 		ts = t.seminfo.ts;
 		next();
 		return ts;
 	}
 	
-	void codestring(expdesc e, TString s) {
+	void codestring(expdesc e, LString s) {
 		e.init(VK, fs.stringK(s));
 	}
 
@@ -747,7 +748,7 @@ public class LexState extends LuaC {
 	}
 
 	
-	int registerlocalvar(TString varname) {
+	int registerlocalvar(LString varname) {
 		FuncState fs = this.fs;
 		Proto f = fs.f;
 		if (f.locvars == null || fs.nlocvars + 1 > f.locvars.length)
@@ -762,11 +763,11 @@ public class LexState extends LuaC {
 //	  this.new_localvar(luaX_newstring(ls, "" v, (sizeof(v)/sizeof(char))-1), n)
 //
 	void new_localvarliteral(String v, int n) {
-		TString ts = newstring(v);
+		LString ts = newstring(v);
 		new_localvar(ts, n);
 	}
 
-	void new_localvar(TString name, int n) {
+	void new_localvar(LString name, int n) {
 		FuncState fs = this.fs;
 		fs.checklimit(fs.nactvar + n + 1, FuncState.LUAI_MAXVARS, "local variables");
 		fs.actvar[fs.nactvar + n] = (short) registerlocalvar(name);
@@ -787,7 +788,7 @@ public class LexState extends LuaC {
 	}
 	
 	void singlevar(expdesc var) {
-		TString varname = this.str_checkname();
+		LString varname = this.str_checkname();
 		FuncState fs = this.fs;
 		if (fs.singlevaraux(varname, var, 1) == VGLOBAL)
 			var.u.s.info = fs.stringK(varname); /* info points to global name */
@@ -1576,7 +1577,7 @@ public class LexState extends LuaC {
 	}
 
 
-	void fornum(TString varname, int line) {
+	void fornum(LString varname, int line) {
 		/* fornum -> NAME = exp1,exp1[,exp1] forbody */
 		FuncState fs = this.fs;
 		int base = fs.freereg;
@@ -1598,7 +1599,7 @@ public class LexState extends LuaC {
 	}
 
 
-	void forlist(TString indexname) {
+	void forlist(LString indexname) {
 		/* forlist -> NAME {,NAME} IN explist1 forbody */
 		FuncState fs = this.fs;
 		expdesc e = new expdesc();
@@ -1624,7 +1625,7 @@ public class LexState extends LuaC {
 	void forstat(int line) {
 		/* forstat -> FOR (fornum | forlist) END */
 		FuncState fs = this.fs;
-		TString varname;
+		LString varname;
 		BlockCnt bl = new BlockCnt();
 		fs.enterblock(bl, true); /* scope for loop and control variables */
 		this.next(); /* skip `for' */

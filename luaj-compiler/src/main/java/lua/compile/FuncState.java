@@ -94,7 +94,7 @@ public class FuncState extends LuaC {
 	}
 
 
-	int indexupvalue(TString name, expdesc v) {
+	int indexupvalue(LString name, expdesc v) {
 		int i;
 		for (i = 0; i < f.nups; i++) {
 			if (upvalues[i].k == v.k && upvalues[i].info == v.u.s.info) {
@@ -114,7 +114,7 @@ public class FuncState extends LuaC {
 		return f.nups++;
 	}
 		
-	int searchvar(TString n) {
+	int searchvar(LString n) {
 		int i;
 		for (i = nactvar - 1; i >= 0; i--) {
 			if (n == getlocvar(i).varname)
@@ -131,7 +131,7 @@ public class FuncState extends LuaC {
 			bl.upval = true;
 	}
 		
-	int singlevaraux(TString n, expdesc var, int base) {
+	int singlevaraux(LString n, expdesc var, int base) {
 		int v = searchvar(n); /* look up at current level */
 		if (v >= 0) {
 			var.init(LexState.VLOCAL, v);
