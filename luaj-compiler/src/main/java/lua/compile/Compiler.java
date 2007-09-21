@@ -25,6 +25,7 @@ public class Compiler {
 		/* main func. is always vararg */
 		funcstate.varargflags = LuaC.VARARG_ISVARARG;
 		funcstate.f.is_vararg = true;
+		funcstate.f.source = new LString("@"+name);
 		lexstate.next(); /* read first token */
 		lexstate.chunk();
 		lexstate.check(LexState.TK_EOS);
@@ -32,7 +33,6 @@ public class Compiler {
 		assert (funcstate.prev == null);
 		assert (funcstate.f.nups == 0);
 		assert (lexstate.fs == null);
-		funcstate.f.source = new LString("@"+name);
 		return funcstate.f;
 	}
 	

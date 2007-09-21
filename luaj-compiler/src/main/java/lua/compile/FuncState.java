@@ -29,7 +29,6 @@ public class FuncState extends LuaC {
 		  boolean isbreakable;  /* true if `block' is a loop */
 		};
 	
-	
 	Proto f;  /* current function header */
 //	LTable h;  /* table to find (and reuse) elements in `k' */
 	Hashtable htable;  /* table to find (and reuse) elements in `k' */
@@ -48,6 +47,9 @@ public class FuncState extends LuaC {
 	upvaldesc upvalues[] = new upvaldesc[LUAI_MAXUPVALUES];  /* upvalues */
 	short actvar[] = new short[LUAI_MAXVARS];  /* declared-variable stack */
 	int varargflags; /* whether varargs are needed */
+	
+	FuncState() {
+	}
 	
 	
 	// =============================================================

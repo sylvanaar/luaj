@@ -842,6 +842,8 @@ public class LexState extends LuaC {
 	void open_func (FuncState fs) {
 		  Compiler L = this.L;
 		  Proto f = new Proto();
+		  if ( this.fs!=null )
+			  f.source = this.fs.f.source;
 		  fs.f = f;
 		  fs.prev = this.fs;  /* linked list of funcstates */
 		  fs.ls = this;
@@ -856,16 +858,10 @@ public class LexState extends LuaC {
 		  fs.nlocvars = 0;
 		  fs.nactvar = 0;
 		  fs.bl = null;
-		  f.source = null;
 		  f.maxstacksize = 2;  /* registers 0/1 are always valid */
 		  //fs.h = new LTable();
 		  fs.htable = new Hashtable();
 		  fs.varargflags = 0;
-// /* anchor table of constants and prototype (to avoid being collected) */
-// sethvalue2s(L, L.top, fs.h);
-// L.incr_top();
-// setptvalue2s(L, L.top, f);
-// L.incr_top();
 	}
 
 	void close_func() {
