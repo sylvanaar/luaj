@@ -21,29 +21,23 @@
 ******************************************************************************/
 package org.luaj.vm2.compiler;
 
+import org.luaj.vm2.*;
+import org.luaj.vm2.compiler.FuncState.BlockCnt;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Hashtable;
 
-import org.luaj.vm2.LuaInteger;
-import org.luaj.vm2.LocVars;
-import org.luaj.vm2.Lua;
-import org.luaj.vm2.LuaError;
-import org.luaj.vm2.Prototype;
-import org.luaj.vm2.LuaString;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.compiler.FuncState.BlockCnt;
-
 
 public class LexState {
-	
+
 	protected static final String RESERVED_LOCAL_VAR_FOR_CONTROL = "(for control)";
     protected static final String RESERVED_LOCAL_VAR_FOR_STATE = "(for state)";
     protected static final String RESERVED_LOCAL_VAR_FOR_GENERATOR = "(for generator)";
     protected static final String RESERVED_LOCAL_VAR_FOR_STEP = "(for step)";
     protected static final String RESERVED_LOCAL_VAR_FOR_LIMIT = "(for limit)";
     protected static final String RESERVED_LOCAL_VAR_FOR_INDEX = "(for index)";
-    
+
     // keywords array
     protected static final String[] RESERVED_LOCAL_VAR_KEYWORDS = new String[] {
         RESERVED_LOCAL_VAR_FOR_CONTROL,
@@ -58,23 +52,23 @@ public class LexState {
     	for ( int i=0; i<RESERVED_LOCAL_VAR_KEYWORDS.length; i++ )
         	RESERVED_LOCAL_VAR_KEYWORDS_TABLE.put( RESERVED_LOCAL_VAR_KEYWORDS[i], Boolean.TRUE );
     }
-                               
+
     private static final int EOZ    = (-1);
 	private static final int MAXSRC = 80;
 	private static final int MAX_INT = Integer.MAX_VALUE-2;
-	private static final int UCHAR_MAX = 255; // TODO, convert to unicode CHAR_MAX? 
+	private static final int UCHAR_MAX = 255; // TODO, convert to unicode CHAR_MAX?
 	private static final int LUAI_MAXCCALLS = 200;
-	
+
 	private static final String LUA_QS(String s) { return "'"+s+"'"; }
 	private static final String LUA_QL(Object o) { return LUA_QS(String.valueOf(o)); }
-	
+
 	private static final int     LUA_COMPAT_LSTR   =    1; // 1 for compatibility, 2 for old behavior
-	private static final boolean LUA_COMPAT_VARARG = true;	
-    
+	private static final boolean LUA_COMPAT_VARARG = true;
+
     public static boolean isReservedKeyword(String varName) {
     	return RESERVED_LOCAL_VAR_KEYWORDS_TABLE.containsKey(varName);
     }
-    
+
 	/*
 	** Marks the end of a patch list. It is an invalid value both as an absolute
 	** address, and as a list link (would link an element to itself).
@@ -84,7 +78,7 @@ public class LexState {
 	/*
 	** grep "ORDER OPR" if you change these enums
 	*/
-	static final int 
+	static final int
 	  OPR_ADD=0, OPR_SUB=1, OPR_MUL=2, OPR_DIV=3, OPR_MOD=4, OPR_POW=5,
 	  OPR_CONCAT=6,
 	  OPR_NE=7, OPR_EQ=8,
@@ -92,11 +86,11 @@ public class LexState {
 	  OPR_AND=13, OPR_OR=14,
 	  OPR_NOBINOPR=15;
 
-	static final int 
+	static final int
 		OPR_MINUS=0, OPR_NOT=1, OPR_LEN=2, OPR_NOUNOPR=3;
 
 	/* exp kind */
-	static final int 	  
+	static final int
 	  VVOID = 0,	/* no value */
 	  VNIL = 1,
 	  VTRUE = 2,
@@ -112,7 +106,7 @@ public class LexState {
 	  VNONRELOC = 12,	/* info = result register */
 	  VCALL = 13,	/* info = instruction pc */
 	  VVARARG = 14;	/* info = instruction pc */
-	
+
 	/* semantics information */
 	private static class SemInfo {
 		LuaValue r;
@@ -128,7 +122,7 @@ public class LexState {
 			this.seminfo.ts = other.seminfo.ts;
 		}
 	};
-	
+
 	int current;  /* current character (charint) */
 	int linenumber;  /* input line counter */
 	int lastline;  /* line of last token `consumed' */
@@ -152,19 +146,19 @@ public class LexState {
 	    "<number>", "<name>", "<string>", "<eof>",
 	};
 
-	final static int 
+	final static int
 		/* terminal symbols denoted by reserved words */
-		TK_AND=257,  TK_BREAK=258, TK_DO=259, TK_ELSE=260, TK_ELSEIF=261, 
-		TK_END=262, TK_FALSE=263, TK_FOR=264, TK_FUNCTION=265, TK_IF=266, 
+		TK_AND=257,  TK_BREAK=258, TK_DO=259, TK_ELSE=260, TK_ELSEIF=261,
+		TK_END=262, TK_FALSE=263, TK_FOR=264, TK_FUNCTION=265, TK_IF=266,
 		TK_IN=267, TK_LOCAL=268, TK_NIL=269, TK_NOT=270, TK_OR=271, TK_REPEAT=272,
 		TK_RETURN=273, TK_THEN=274, TK_TRUE=275, TK_UNTIL=276, TK_WHILE=277,
 		/* other terminal symbols */
-		TK_CONCAT=278, TK_DOTS=279, TK_EQ=280, TK_GE=281, TK_LE=282, TK_NE=283, 
+		TK_CONCAT=278, TK_DOTS=279, TK_EQ=280, TK_GE=281, TK_LE=282, TK_NE=283,
 		TK_NUMBER=284, TK_NAME=285, TK_STRING=286, TK_EOS=287;
 
 	final static int FIRST_RESERVED = TK_AND;
 	final static int NUM_RESERVED = TK_WHILE+1-FIRST_RESERVED;
-	
+
 	final static Hashtable RESERVED = new Hashtable();
 	static {
 		for ( int i=0; i<NUM_RESERVED; i++ ) {
@@ -174,27 +168,27 @@ public class LexState {
 	}
 
 	private boolean isalnum(int c) {
-		return (c >= '0' && c <= '9') 
+		return (c >= '0' && c <= '9')
 			|| (c >= 'a' && c <= 'z')
 			|| (c >= 'A' && c <= 'Z')
 			|| (c == '_');
 		// return Character.isLetterOrDigit(c);
 	}
-	
+
 	private boolean isalpha(int c) {
 		return (c >= 'a' && c <= 'z')
 			|| (c >= 'A' && c <= 'Z');
 	}
-	
+
 	private boolean isdigit(int c) {
-		return (c >= '0' && c <= '9'); 
+		return (c >= '0' && c <= '9');
 	}
-	
+
 	private boolean isspace(int c) {
 		return (c <= ' ');
 	}
-	
-	
+
+
 	public LexState(LuaC state, InputStream stream) {
 		this.z = stream;
 		this.buff = new byte[32];
@@ -228,7 +222,7 @@ public class LexState {
 
 	String token2str( int token ) {
 		if ( token < FIRST_RESERVED ) {
-			return iscntrl(token)? 
+			return iscntrl(token)?
 					L.pushfstring( "char("+((int)token)+")" ):
 					L.pushfstring( String.valueOf( (char) token ) );
 		} else {
@@ -253,10 +247,10 @@ public class LexState {
 
 	void lexerror( String msg, int token ) {
 		String cid = chunkid( source.tojstring() ); // TODO: get source name from source
-		L.pushfstring( cid+":"+linenumber+": "+msg );
+		String error = L.pushfstring( cid+":"+linenumber+": "+msg );
 		if ( token != 0 )
-			L.pushfstring( "syntax error: "+msg+" near "+txtToken(token) );
-		throw new LuaError(cid+":"+linenumber+": "+msg);
+			error = L.pushfstring( "syntax error: "+error+" near "+txtToken(token) );
+		throw new LuaError(error);
 	}
 
 	String chunkid( String source ) {
