@@ -20,22 +20,13 @@
 * THE SOFTWARE.
 ******************************************************************************/
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Vector;
-
-import org.luaj.vm2.LoadState;
-import org.luaj.vm2.Lua;
-import org.luaj.vm2.LuaFunction;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.*;
 import org.luaj.vm2.lib.jse.JsePlatform;
 import org.luaj.vm2.lua2java.Lua2Java;
 import org.luaj.vm2.luajc.LuaJC;
+
+import java.io.*;
+import java.util.Vector;
 
 
 /**
@@ -44,7 +35,7 @@ import org.luaj.vm2.luajc.LuaJC;
 public class lua {
 	private static final String version = Lua._VERSION + "Copyright (c) 2009 Luaj.org.org";
 
-	private static final String usage = 
+	private static final String usage =
 		"usage: java -cp luaj-jse.jar lua [options] [script [args]].\n" +
 		"Available options are:\n" +
 		"  -e stat  execute string 'stat'\n" +
@@ -59,11 +50,11 @@ public class lua {
 
 	private static void usageExit() {
 		System.out.println(usage);
-		System.exit(-1);		
+		System.exit(-1);
 	}
 
 	private static LuaValue _G;
-	
+
 	public static void main( String[] args ) throws IOException {
 
 		// process args
@@ -126,14 +117,14 @@ public class lua {
 			// echo version
 			if ( versioninfo )
 				System.out.println(version);
-			
+
 			// new lua state
 			_G = nodebug? JsePlatform.standardGlobals(): JsePlatform.debugGlobals();
 			if ( luajc ) LuaJC.install();
 			if ( lua2java) Lua2Java.install();
 			for ( int i=0, n=libs!=null? libs.size(): 0; i<n; i++ )
 				loadLibrary( (String) libs.elementAt(i) );
-			
+
 			// input script processing
 			processing = true;
 			for ( int i=0; i<args.length; i++ ) {
@@ -161,10 +152,10 @@ public class lua {
 					}
 				}
 			}
-			
+
 			if ( interactive )
 				interactiveMode();
-			
+
 		} catch ( IOException ioe ) {
 			System.err.println( ioe.toString() );
 			System.exit(-2);
@@ -179,14 +170,14 @@ public class lua {
 	}
 
 	private static void loadLibrary( String libname ) throws IOException {
-		LuaValue slibname =LuaValue.valueOf(libname); 
+		LuaValue slibname =LuaValue.valueOf(libname);
 		try {
 			// load via plain require
 			_G.get("require").call(slibname);
 		} catch ( Exception e ) {
 			try {
 				// load as java class
-				LuaValue v = (LuaValue) Class.forName(libname).newInstance(); 
+				LuaValue v = (LuaValue) Class.forName(libname).newInstance();
 				v.setfenv(_G);
 				v.call(slibname, _G);
 			} catch ( Exception f ) {
@@ -194,32 +185,58 @@ public class lua {
 			}
 		}
 	}
-	
-	private static void processScript( InputStream script, String chunkname ) throws IOException {
+
+	private static Varargs processScript( InputStream script, String chunkname ) throws IOException {
 		try {
-			LuaFunction c;
-			try {
-				c = LoadState.load(script, chunkname, _G);
-			} finally {
-				script.close();
-			}
-			c.invoke( LuaValue.valueOf(chunkname) );
+            return runScript(script, chunkname);
 		} catch ( Throwable t ) {
 			t.printStackTrace( System.err );
 		}
+        return null;
 	}
 
-	private static final String[] NOARGS = {};
-	
+    private static Varargs runScript(InputStream script, String chunkname) throws IOException {
+        LuaFunction c;
+        try {
+            c = LoadState.load(script, chunkname, _G);
+        } finally {
+            script.close();
+        }
+        return c.invoke( LuaValue.valueOf(chunkname) );
+    }
+
+    private static final String[] NOARGS = {};
+
 	private static void interactiveMode( ) throws IOException {
 		BufferedReader reader = new BufferedReader( new InputStreamReader( System.in ) );
+        boolean partial = false;
+        String line = null;
 		while ( true ) {
-			System.out.print("> ");
+			System.out.print(partial ? ">> " : "> ");
 			System.out.flush();
-			String line = reader.readLine();
-			if ( line == null )
+			String line1 = reader.readLine();
+			if ( line1 == null )
 				return;
-			processScript( new ByteArrayInputStream(line.getBytes()), "=stdin" );
+
+            line = partial ? line + line1 : line1;
+
+            if (line.startsWith("="))
+                line = "return " + line.substring(1);
+
+            try {
+                Varargs result = runScript(new ByteArrayInputStream(line.getBytes()), "=stdin");
+                if (result.narg()>0)
+                    System.out.println(result);
+            } catch (LuaError e) {
+                if (e.getMessage().endsWith("<eof>")) {
+                    partial = true;
+                    continue;
+                }
+                System.err.println(e.getMessage());
+                System.err.flush();
+            }
+
+            partial = false;
 		}
 	}
 }
